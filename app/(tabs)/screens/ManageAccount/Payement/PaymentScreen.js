@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Act
 import { ArrowLeft, Bell, CreditCard, Landmark, CheckCircle, Clock, Copy, Building2, Award } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { collection, getDocs, query, where, updateDoc, doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { db } from '../../../../../firebase';
 import { getAuth } from 'firebase/auth';
 import * as Clipboard from 'expo-clipboard';
 

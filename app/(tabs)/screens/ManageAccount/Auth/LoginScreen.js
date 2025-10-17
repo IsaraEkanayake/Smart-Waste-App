@@ -16,7 +16,7 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
-import { auth, db } from "../../../../firebase";
+import { auth, db } from "../../../../../firebase";
 
 const COLORS = {
   primary: "#5DADE2",
