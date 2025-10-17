@@ -1,10 +1,19 @@
+<<<<<<< HEAD
 // screens/DashboardScreen.js
 import React, { useState } from 'react';
 import { View, ScrollView, SafeAreaView, Alert } from 'react-native';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../../../firebase';
+=======
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+>>>>>>> b8a80e7c7e8a3db308541310e9bf0ff5f74557ed
 import { signOut } from 'firebase/auth';
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, updateDoc, where } from 'firebase/firestore';
+import { Award, Bell, Calendar, DollarSign, Edit2, LogOut, Mail, MapPin, Phone, Trash2, User, X } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../../../../firebase';
 
 // Hooks
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -154,6 +163,7 @@ export default function DashboardScreen() {
     setShowEditModal(true);
   };
 
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
@@ -195,6 +205,7 @@ export default function DashboardScreen() {
               onScheduleNew={handleScheduleNew}
             />
           </View>
+
         </ScrollView>
 
         {/* Modals */}
