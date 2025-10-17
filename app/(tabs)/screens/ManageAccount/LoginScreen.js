@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   View,
@@ -241,7 +240,7 @@ const LoginScreen = () => {
               </View>
 
               <View style={styles.footer}>
-                <Text style={styles.footerText}>Don't have an account? </Text>
+                <Text style={styles.footerText}>{"Don't have an account?"}</Text>
                 <TouchableOpacity onPress={handleRegisterRedirect} disabled={loading}>
                   <Text style={styles.registerLink}>Register Now</Text>
                 </TouchableOpacity>
