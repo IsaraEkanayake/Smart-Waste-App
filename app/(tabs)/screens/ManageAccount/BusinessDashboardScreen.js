@@ -1,292 +1,53 @@
-import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
+import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
-import { Trash2, Award, Calendar, Bell, TrendingUp, Users, Package, X, Clock, MapPin, Edit2, Plus } from 'lucide-react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { collection, addDoc, getDocs, query, orderBy, where, limit, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { Trash2, Award, Calendar, Bell, Package, X, Clock, MapPin, Edit2, Plus } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+
+import { useBusinessDashboard } from '../../hooks/useBusinessDashboard';
+import { formatDate, getStatusBadgeStyle, rewardIcons } from '../../utils/businessDashboardUtils';
+import RewardTaskCard from '../../components/BusinessDashboard/RewardTaskCard';
+import ScheduleCard from '../../components/BusinessDashboard/ScheduleCard';
+import StatsCard from '../../components/BusinessDashboard/StatsCard';
+import styles from '../../styles/BusinessDashboardStyles';
+=======
+import { useFocusEffect, useRouter } from 'expo-router';
+import { addDoc, collection, deleteDoc, doc, getDocs, limit, orderBy, query, updateDoc } from 'firebase/firestore';
+import { Award, BarChart3, Bell, Calendar, Clock, Edit2, MapPin, Package, Plus, Trash2, TrendingUp, Users, X } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../../../firebase';
+>>>>>>> b8a80e7c7e8a3db308541310e9bf0ff5f74557ed
 
 export default function BusinessDashboardScreen() {
   const router = useRouter();
-  const [showGarbageModal, setShowGarbageModal] = useState(false);
-  const [showRewardModal, setShowRewardModal] = useState(false);
-  const [editingReward, setEditingReward] = useState(null);
-  const [garbageRecords, setGarbageRecords] = useState([]);
-  const [schedules, setSchedules] = useState([]);
-  const [rewardTasks, setRewardTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  const [formData, setFormData] = useState({
-    residentName: '',
-    residentAddress: '',
-    residentPhone: '',
-    collectionDate: '',
-    organicWaste: '',
-    recyclableWaste: '',
-    otherWaste: '',
-    totalWeight: '',
-    pricePerKg: '1',
-    totalCost: '0',
-    status: 'Unpaid',
-  });
-
-  const [rewardFormData, setRewardFormData] = useState({
-    name: '',
-    description: '',
-    pointsRequired: '',
-    rewardType: 'discount', // discount, bonus_points, service
-    rewardValue: '', // discount percentage or bonus points
-    icon: 'percent',
-    bgColor: '#FEF3C7',
-    iconColor: '#F59E0B',
-  });
-
-  const rewardIcons = [
-    { id: 'percent', label: 'Discount', color: '#F59E0B', bg: '#FEF3C7' },
-    { id: 'recycle', label: 'Eco Reward', color: '#10B981', bg: '#D1FAE5' },
-    { id: 'trending', label: 'Bonus', color: '#3B82F6', bg: '#DBEAFE' },
-    { id: 'award', label: 'Premium', color: '#A855F7', bg: '#E9D5FF' },
-  ];
-
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchAllData();
-    }, [])
-  );
-
-  useEffect(() => {
-    const organic = parseFloat(formData.organicWaste) || 0;
-    const recyclable = parseFloat(formData.recyclableWaste) || 0;
-    const other = parseFloat(formData.otherWaste) || 0;
-    const pricePerKg = parseFloat(formData.pricePerKg) || 1;
-    
-    const total = organic + recyclable + other;
-    const cost = total * pricePerKg;
-    
-    setFormData(prev => ({
-      ...prev,
-      totalWeight: total.toFixed(2),
-      totalCost: cost.toFixed(2)
-    }));
-  }, [formData.organicWaste, formData.recyclableWaste, formData.otherWaste, formData.pricePerKg]);
-
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        fetchGarbageRecords(),
-        fetchSchedules(),
-        fetchRewardTasks()
-      ]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchGarbageRecords = async () => {
-    try {
-      const q = query(collection(db, 'garbageCollections'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const records = [];
-      querySnapshot.forEach((doc) => {
-        records.push({ id: doc.id, ...doc.data() });
-      });
-      setGarbageRecords(records);
-    } catch (error) {
-      console.error('Error fetching records:', error);
-    }
-  };
-
-  const fetchSchedules = async () => {
-    try {
-      const q = query(collection(db, 'schedules'), limit(50));
-      const querySnapshot = await getDocs(q);
-      const scheduleList = [];
-      
-      querySnapshot.forEach((doc) => {
-        const scheduleData = { id: doc.id, ...doc.data() };
-        if (scheduleData.status === 'Scheduled') {
-          scheduleList.push(scheduleData);
-        }
-      });
-      
-      scheduleList.sort((a, b) => {
-        const dateA = new Date(a.createdAt || 0);
-        const dateB = new Date(b.createdAt || 0);
-        return dateB - dateA;
-      });
-      
-      setSchedules(scheduleList.slice(0, 20));
-    } catch (error) {
-      console.error('Error fetching schedules:', error);
-    }
-  };
-
-  const fetchRewardTasks = async () => {
-    try {
-      const q = query(collection(db, 'rewardTasks'), orderBy('pointsRequired', 'asc'));
-      const querySnapshot = await getDocs(q);
-      const tasks = [];
-      querySnapshot.forEach((doc) => {
-        tasks.push({ id: doc.id, ...doc.data() });
-      });
-      setRewardTasks(tasks);
-    } catch (error) {
-      console.error('Error fetching reward tasks:', error);
-    }
-  };
-
-  const handleSaveGarbageRecord = async () => {
-    if (!formData.residentName || !formData.residentAddress || !formData.residentPhone || 
-        !formData.collectionDate || !formData.totalWeight || parseFloat(formData.totalWeight) === 0) {
-      Alert.alert('Validation Error', 'Please fill in all required fields and add waste weight');
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, 'garbageCollections'), {
-        ...formData,
-        createdAt: new Date().toISOString(),
-        month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
-      });
-
-      Alert.alert('Success', 'Garbage collection record saved successfully');
-      setShowGarbageModal(false);
-      resetForm();
-      fetchGarbageRecords();
-    } catch (error) {
-      console.error('Error saving record:', error);
-      Alert.alert('Error', 'Failed to save garbage record');
-    }
-  };
-
-  const handleSaveReward = async () => {
-    if (!rewardFormData.name || !rewardFormData.description || !rewardFormData.pointsRequired || !rewardFormData.rewardValue) {
-      Alert.alert('Validation Error', 'Please fill in all required fields');
-      return;
-    }
-
-    try {
-      const rewardData = {
-        ...rewardFormData,
-        pointsRequired: parseInt(rewardFormData.pointsRequired),
-        rewardValue: parseFloat(rewardFormData.rewardValue),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      if (editingReward) {
-        await updateDoc(doc(db, 'rewardTasks', editingReward.id), rewardData);
-        Alert.alert('Success', 'Reward task updated successfully');
-      } else {
-        await addDoc(collection(db, 'rewardTasks'), rewardData);
-        Alert.alert('Success', 'Reward task created successfully');
-      }
-
-      setShowRewardModal(false);
-      setEditingReward(null);
-      resetRewardForm();
-      fetchRewardTasks();
-    } catch (error) {
-      console.error('Error saving reward:', error);
-      Alert.alert('Error', 'Failed to save reward task');
-    }
-  };
-
-  const handleEditReward = (reward) => {
-    setEditingReward(reward);
-    setRewardFormData({
-      name: reward.name,
-      description: reward.description,
-      pointsRequired: reward.pointsRequired.toString(),
-      rewardType: reward.rewardType,
-      rewardValue: reward.rewardValue.toString(),
-      icon: reward.icon,
-      bgColor: reward.bgColor,
-      iconColor: reward.iconColor,
-    });
-    setShowRewardModal(true);
-  };
-
-  const handleDeleteReward = async (rewardId) => {
-    Alert.alert(
-      'Delete Reward',
-      'Are you sure you want to delete this reward task?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(db, 'rewardTasks', rewardId));
-              Alert.alert('Success', 'Reward task deleted successfully');
-              fetchRewardTasks();
-            } catch (error) {
-              console.error('Error deleting reward:', error);
-              Alert.alert('Error', 'Failed to delete reward task');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const resetForm = () => {
-    setFormData({
-      residentName: '',
-      residentAddress: '',
-      residentPhone: '',
-      collectionDate: '',
-      organicWaste: '',
-      recyclableWaste: '',
-      otherWaste: '',
-      totalWeight: '',
-      pricePerKg: '1',
-      totalCost: '0',
-      status: 'Unpaid',
-    });
-  };
-
-  const resetRewardForm = () => {
-    setRewardFormData({
-      name: '',
-      description: '',
-      pointsRequired: '',
-      rewardType: 'discount',
-      rewardValue: '',
-      icon: 'percent',
-      bgColor: '#FEF3C7',
-      iconColor: '#F59E0B',
-    });
-  };
-
-  const formatDate = (dateString) => {
-    try {
-      const [day, month, year] = dateString.split('/');
-      const date = new Date(year, month - 1, day);
-      const options = { month: 'short', day: 'numeric', weekday: 'short' };
-      return date.toLocaleDateString('en-US', options);
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  const getStatusBadgeStyle = (status) => {
-    switch(status) {
-      case 'Scheduled':
-        return [styles.statusBadge, styles.statusScheduled];
-      case 'Pending':
-        return [styles.statusBadge, styles.statusPending];
-      case 'Completed':
-        return [styles.statusBadge, styles.statusCompleted];
-      default:
-        return [styles.statusBadge, styles.statusPending];
-    }
-  };
+  const {
+    showGarbageModal,
+    setShowGarbageModal,
+    showRewardModal,
+    setShowRewardModal,
+    editingReward,
+    garbageRecords,
+    schedules,
+    rewardTasks,
+    loading,
+    formData,
+    setFormData,
+    rewardFormData,
+    setRewardFormData,
+    handleSaveGarbageRecord,
+    handleSaveReward,
+    handleEditReward,
+    handleDeleteReward,
+    resetForm,
+    resetRewardForm
+  } = useBusinessDashboard();
 
   const totalRevenue = garbageRecords.reduce((sum, record) => sum + parseFloat(record.totalCost || 0), 0);
+
+  const handleViewReports = () => {
+    router.push('/(tabs)/screens/ManageAccount/ReportsDashboard');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -326,23 +87,7 @@ export default function BusinessDashboardScreen() {
           </View>
 
           {/* Stats Overview */}
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <View style={[styles.iconCircle, styles.blueBg]}>
-                <TrendingUp size={24} color="#3B82F6" strokeWidth={2.5} />
-              </View>
-              <Text style={styles.statLabel}>Total Revenue</Text>
-              <Text style={styles.statValue}>${totalRevenue.toFixed(2)}</Text>
-            </View>
-
-            <View style={styles.statCard}>
-              <View style={[styles.iconCircle, styles.yellowBg]}>
-                <Users size={24} color="#F59E0B" strokeWidth={2.5} />
-              </View>
-              <Text style={styles.statLabel}>Active Schedules</Text>
-              <Text style={styles.statValue}>{schedules.length}</Text>
-            </View>
-          </View>
+          <StatsCard totalRevenue={totalRevenue} activeSchedules={schedules.length} />
 
           {/* Reward Tasks Management Section */}
           <View style={styles.rewardsManagementCard}>
@@ -358,7 +103,6 @@ export default function BusinessDashboardScreen() {
             <TouchableOpacity 
               style={styles.addRewardButton} 
               onPress={() => {
-                setEditingReward(null);
                 resetRewardForm();
                 setShowRewardModal(true);
               }}
@@ -374,51 +118,12 @@ export default function BusinessDashboardScreen() {
               <View style={styles.rewardTasksList}>
                 <Text style={styles.rewardTasksTitle}>Active Reward Tasks ({rewardTasks.length})</Text>
                 {rewardTasks.map((reward) => (
-                  <View key={reward.id} style={styles.rewardTaskCard}>
-                    <View style={styles.rewardTaskHeader}>
-                      <View style={[styles.rewardTaskIcon, { backgroundColor: reward.bgColor }]}>
-                        <Award size={24} color={reward.iconColor} />
-                      </View>
-                      <View style={styles.rewardTaskInfo}>
-                        <Text style={styles.rewardTaskName}>{reward.name}</Text>
-                        <Text style={styles.rewardTaskDescription}>{reward.description}</Text>
-                      </View>
-                    </View>
-                    
-                    <View style={styles.rewardTaskDetails}>
-                      <View style={styles.rewardTaskDetailItem}>
-                        <Text style={styles.rewardTaskDetailLabel}>Points Required:</Text>
-                        <Text style={styles.rewardTaskDetailValue}>{reward.pointsRequired} pts</Text>
-                      </View>
-                      <View style={styles.rewardTaskDetailItem}>
-                        <Text style={styles.rewardTaskDetailLabel}>Reward:</Text>
-                        <Text style={styles.rewardTaskDetailValue}>
-                          {reward.rewardType === 'discount' 
-                            ? `${reward.rewardValue}% Off` 
-                            : reward.rewardType === 'bonus_points'
-                            ? `+${reward.rewardValue} pts`
-                            : reward.rewardValue}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.rewardTaskActions}>
-                      <TouchableOpacity 
-                        style={styles.editButton}
-                        onPress={() => handleEditReward(reward)}
-                      >
-                        <Edit2 size={16} color="#3B82F6" />
-                        <Text style={styles.editButtonText}>Edit</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={styles.deleteButton}
-                        onPress={() => handleDeleteReward(reward.id)}
-                      >
-                        <Trash2 size={16} color="#EF4444" />
-                        <Text style={styles.deleteButtonText}>Delete</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
+                  <RewardTaskCard
+                    key={reward.id}
+                    reward={reward}
+                    onEdit={handleEditReward}
+                    onDelete={handleDeleteReward}
+                  />
                 ))}
               </View>
             ) : (
@@ -442,36 +147,12 @@ export default function BusinessDashboardScreen() {
               <ActivityIndicator size="large" color="#5DADE2" style={styles.loader} />
             ) : schedules.length > 0 ? (
               schedules.map((schedule) => (
-                <View key={schedule.id} style={styles.pickupCard}>
-                  <View style={styles.pickupHeader}>
-                    <View style={styles.pickupTitleContainer}>
-                      <Text style={styles.pickupName}>{schedule.wasteType}</Text>
-                      <View style={getStatusBadgeStyle(schedule.status)}>
-                        <Text style={styles.statusText}>{schedule.status}</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View style={styles.pickupDetailRow}>
-                    <MapPin size={16} color="#6B7280" />
-                    <Text style={styles.pickupAddress}>{schedule.address}</Text>
-                  </View>
-
-                  <View style={styles.pickupFooter}>
-                    <View style={styles.pickupInfo}>
-                      <Calendar size={16} color="#6B7280" />
-                      <Text style={styles.pickupDate}>{formatDate(schedule.preferredDate)}</Text>
-                    </View>
-                    <View style={styles.pickupInfo}>
-                      <Clock size={16} color="#6B7280" />
-                      <Text style={styles.pickupTime}>{schedule.preferredTime}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.quantityInfo}>
-                    <Text style={styles.quantityLabel}>Quantity: {schedule.quantity} {schedule.unit}</Text>
-                  </View>
-                </View>
+                <ScheduleCard
+                  key={schedule.id}
+                  schedule={schedule}
+                  formatDate={formatDate}
+                  getStatusBadgeStyle={(status) => getStatusBadgeStyle(status, styles)}
+                />
               ))
             ) : (
               <View style={styles.emptyState}>
@@ -479,6 +160,24 @@ export default function BusinessDashboardScreen() {
                 <Text style={styles.emptyStateText}>No scheduled pickups yet</Text>
               </View>
             )}
+          </View>
+
+          {/* Reports & Analytics Section */}
+          <View style={styles.reportsSection}>
+            <TouchableOpacity style={styles.reportsButton} onPress={handleViewReports}>
+              <View style={styles.reportsButtonContent}>
+                <View style={styles.reportsIconContainer}>
+                  <BarChart3 size={28} color="#5DADE2" strokeWidth={2.5} />
+                </View>
+                <View style={styles.reportsTextContainer}>
+                  <Text style={styles.reportsButtonTitle}>Reports & Analytics</Text>
+                  <Text style={styles.reportsButtonSubtitle}>View system insights and performance metrics</Text>
+                </View>
+                <View style={styles.reportsArrow}>
+                  <Text style={styles.reportsArrowText}>→</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.bottomPadding} />
@@ -557,7 +256,7 @@ export default function BusinessDashboardScreen() {
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>{editingReward ? 'Edit' : 'Create'} Reward Task</Text>
-                  <TouchableOpacity onPress={() => { setShowRewardModal(false); setEditingReward(null); }}>
+                  <TouchableOpacity onPress={() => { setShowRewardModal(false); }}>
                     <X size={24} color="#6B7280" />
                   </TouchableOpacity>
                 </View>
@@ -600,7 +299,7 @@ export default function BusinessDashboardScreen() {
                 </View>
 
                 <View style={styles.modalButtons}>
-                  <TouchableOpacity style={styles.modalCancelButton} onPress={() => { setShowRewardModal(false); setEditingReward(null); resetRewardForm(); }}>
+                  <TouchableOpacity style={styles.modalCancelButton} onPress={() => { setShowRewardModal(false); resetRewardForm(); }}>
                     <Text style={styles.modalCancelText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.modalSaveButton} onPress={handleSaveReward}>
@@ -614,6 +313,9 @@ export default function BusinessDashboardScreen() {
       </View>
     </SafeAreaView>
   );
+<<<<<<< HEAD
+}
+=======
 }
 
 const styles = StyleSheet.create({
@@ -713,4 +415,53 @@ const styles = StyleSheet.create({
   modalCancelText: { fontSize: 16, color: '#6B7280', fontWeight: '600' },
   modalSaveButton: { flex: 1, paddingVertical: 14, borderRadius: 8, backgroundColor: '#10B981', alignItems: 'center' },
   modalSaveText: { fontSize: 16, color: 'white', fontWeight: '600' },
+  reportsSection: { marginTop: 24, marginBottom: 16 },
+  reportsButton: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  reportsButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reportsIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#F0F9FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  reportsTextContainer: {
+    flex: 1,
+  },
+  reportsButtonTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  reportsButtonSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  reportsArrow: {
+    marginLeft: 12,
+  },
+  reportsArrowText: {
+    fontSize: 24,
+    color: '#5DADE2',
+    fontWeight: 'bold',
+  },
 });
+>>>>>>> b8a80e7c7e8a3db308541310e9bf0ff5f74557ed
