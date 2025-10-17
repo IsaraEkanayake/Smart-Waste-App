@@ -1,4 +1,3 @@
-
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -17,7 +16,7 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
-import { auth, db } from "../../../../firebase";
+import { auth, db } from "../../../../../firebase";
 
 const COLORS = {
   primary: "#5DADE2",
@@ -242,7 +241,7 @@ const LoginScreen = () => {
               </View>
 
               <View style={styles.footer}>
-                <Text style={styles.footerText}>Don't have an account? </Text>
+                <Text style={styles.footerText}>{"Don't have an account?"}</Text>
                 <TouchableOpacity onPress={handleRegisterRedirect} disabled={loading}>
                   <Text style={styles.registerLink}>Register Now</Text>
                 </TouchableOpacity>
